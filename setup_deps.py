@@ -3,12 +3,12 @@
 TurboOCR 依赖准备工具
 
 从 GitHub Releases 下载预编译的第三方库 (3rdparty/) 和 OCR 模型 (models/)。
-总计约 3.4GB，请预留足够磁盘空间。
+总计约 2.7GB (压缩后)，解压后约 3.4GB，请预留足够磁盘空间。
 
 用法:
     python setup_deps.py                  # 下载当前版本对应的依赖
     python setup_deps.py --tag v0.3.0     # 指定 Release 版本
-    python setup_deps.py --local deps.zip # 使用本地已下载的压缩包
+    python setup_deps.py --local ./deps/  # 使用本地已下载的压缩包目录
     python setup_deps.py --check          # 仅检查，不下载
 
 Release 页面: https://github.com/lazyboooooy/TurboOCR/releases
@@ -16,8 +16,8 @@ Release 页面: https://github.com/lazyboooooy/TurboOCR/releases
 
 import os
 import sys
+import tarfile
 import zipfile
-import hashlib
 import argparse
 from pathlib import Path
 from urllib.request import urlopen, urlretrieve
@@ -28,32 +28,32 @@ from urllib.error import URLError, HTTPError
 # ============================================================
 REPO = "lazyboooooy/TurboOCR"
 GITHUB_HOST = "https://github.com"
-# 也可通过 ghproxy.com 等镜像加速 (国内用户):
+# 国内用户可通过 ghproxy 镜像加速 (取消下一行注释):
 # GITHUB_HOST = "https://ghproxy.com/https://github.com"
 
 ROOT = Path(__file__).parent
-DEPS_ZIP = ROOT / "deps.zip"
-
-# Release 包里应包含的顶层目录
 REQUIRED_DIRS = ["3rdparty", "models"]
+
+# 依赖分三包 (GitHub Release 单文件限制 2GB)
+ARCHIVES = [
+    "deps-paddle-core.zip",   # paddle_inference 核心 (不含 CUDA DLL)
+    "deps-paddle-cuda.zip",   # CUDA/cuDNN DLL
+    "deps-other.zip",         # 其余第三方库 + OCR 模型
+]
 
 
 # ============================================================
 # 下载
 # ============================================================
 def download_with_progress(url: str, dest: Path):
-    """带进度条的下载，处理重定向"""
-    print(f"  下载地址: {url}")
-    print()
-
+    """带进度条的下载"""
+    print(f"  下载: {dest.name}")
     try:
         resp = urlopen(url)
     except HTTPError as e:
         if e.code == 302:
-            # 手动处理重定向 (GitHub Releases 经常 redirect)
             redirect_url = e.headers.get("Location")
             if redirect_url:
-                print(f"  跟随重定向 -> {redirect_url}")
                 resp = urlopen(redirect_url)
             else:
                 raise
@@ -84,38 +84,36 @@ def download_with_progress(url: str, dest: Path):
     return True
 
 
-def get_release_url(tag: str) -> str:
-    """拼接 GitHub Release 下载链接"""
-    return f"{GITHUB_HOST}/{REPO}/releases/download/{tag}/deps.zip"
-
-
 # ============================================================
 # 解压
 # ============================================================
-def extract_deps(zip_path: Path) -> bool:
-    """解压 deps.zip 到项目根目录"""
-    print(f"\n  解压 {zip_path.name} -> {ROOT} ...")
+def extract_archive(archive_path: Path) -> bool:
+    """解压 zip 到项目根目录"""
+    print(f"  解压 {archive_path.name} ...")
     try:
-        with zipfile.ZipFile(zip_path, "r") as zf:
-            # 先打印解压清单概览
-            total_files = len(zf.infolist())
-            total_size = sum(info.file_size for info in zf.infolist()) / (1024 * 1024)
-
-            print(f"  文件数: {total_files}, 总大小: {total_size:.0f} MB")
-            print()
-
-            extracted = 0
-            for info in zf.infolist():
+        with zipfile.ZipFile(archive_path, "r") as zf:
+            total = len(zf.infolist())
+            for i, info in enumerate(zf.infolist(), 1):
                 zf.extract(info, ROOT)
-                extracted += 1
-                if extracted % 500 == 0 or extracted == total_files:
-                    print(f"\r  解压中... {extracted}/{total_files}", end="", flush=True)
-
+                if i % 500 == 0 or i == total:
+                    print(f"\r  解压中... {i}/{total}", end="", flush=True)
         print()
         return True
     except Exception as e:
         print(f"\n  ✗ 解压失败: {e}")
         return False
+
+
+def extract_all(local_dir: Path) -> bool:
+    """逐一解压所有分包"""
+    for name in ARCHIVES:
+        archive_path = local_dir / name
+        if not archive_path.exists():
+            print(f"  ✗ 缺少文件: {name}")
+            return False
+        if not extract_archive(archive_path):
+            return False
+    return True
 
 
 # ============================================================
@@ -133,7 +131,6 @@ def verify_deps() -> bool:
             print(f"  ✗ {d}/ 为空")
             all_ok = False
         else:
-            # 统计大小
             total = sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
             size_mb = total / (1024 * 1024)
             print(f"  ✓ {d}/  ({size_mb:.0f} MB)")
@@ -153,7 +150,7 @@ def main():
     )
     parser.add_argument(
         "--local",
-        help="使用本地 zip 文件，跳过下载"
+        help="使用本地目录 (包含三个 zip 文件)，跳过下载"
     )
     parser.add_argument(
         "--check", action="store_true",
@@ -186,68 +183,56 @@ def main():
 
     # 下载
     if args.local:
-        zip_path = Path(args.local)
-        if not zip_path.exists():
-            print(f"  ✗ 文件不存在: {args.local}")
+        local_dir = Path(args.local)
+        if not local_dir.is_dir():
+            print(f"  ✗ 目录不存在: {args.local}")
             return 1
-        print(f"  使用本地压缩包: {zip_path}")
+        print(f"  使用本地文件: {local_dir}")
+        if not extract_all(local_dir):
+            return 1
     else:
-        url = get_release_url(args.tag)
         print(f"  目标版本: {args.tag}")
+        print(f"  共 {len(ARCHIVES)} 个分包 (~2.7GB), 开始下载...")
         print()
 
-        # 先探一下 URL 是否可达
-        try:
-            print("  检查 Release 是否存在...")
-            urlopen(url)
-            print("  ✓ Release 可用")
-        except HTTPError as e:
-            print(f"  ✗ Release 不存在 (HTTP {e.code})")
-            print()
-            print(f"  请确认版本 tag 正确: {args.tag}")
-            print(f"  查看可用版本: {GITHUB_HOST}/{REPO}/releases")
-            print(f"  或手动下载后指定: python setup_deps.py --local deps.zip")
-            return 1
-        except URLError as e:
-            print(f"  ✗ 网络错误: {e}")
-            print()
-            print("  请检查网络连接。国内用户可尝试:")
-            print(f"    1. 编辑此脚本, 将 GITHUB_HOST 改为 ghproxy 镜像")
-            print(f"    2. 或手动下载 Release 中的 deps.zip")
-            print(f"       {GITHUB_HOST}/{REPO}/releases")
-            print(f"       然后运行: python setup_deps.py --local deps.zip")
-            return 1
+        tmp_dir = ROOT / ".deps_tmp"
+        tmp_dir.mkdir(exist_ok=True)
+
+        for name in ARCHIVES:
+            url = f"{GITHUB_HOST}/{REPO}/releases/download/{args.tag}/{name}"
+            dest = tmp_dir / name
+
+            # 先检查 URL
+            try:
+                urlopen(url)
+            except HTTPError as e:
+                print(f"  ✗ 文件不存在 (HTTP {e.code}): {name}")
+                print(f"    请确认版本 tag 和 Release 文件: {GITHUB_HOST}/{REPO}/releases")
+                return 1
+            except URLError as e:
+                print(f"  ✗ 网络错误: {e}")
+                print(f"    请检查网络连接，或手动下载后运行:")
+                print(f"      python setup_deps.py --local <目录>")
+                return 1
+
+            try:
+                download_with_progress(url, dest)
+            except (URLError, HTTPError, OSError) as e:
+                print(f"  ✗ 下载失败: {e}")
+                return 1
 
         print()
-        print(f"  开始下载 deps.zip (~3.4GB), 请耐心等待...")
-        zip_path = DEPS_ZIP
-
-        try:
-            download_with_progress(url, zip_path)
-            print()
-            print("  ✓ 下载完成")
-        except (URLError, HTTPError, OSError) as e:
-            print(f"\n  ✗ 下载失败: {e}")
-            # 清理不完整的文件
-            if zip_path.exists():
-                zip_path.unlink()
+        print("  ✓ 下载完成，开始解压...")
+        if not extract_all(tmp_dir):
             return 1
 
-    # 解压
-    if not extract_deps(zip_path):
-        return 1
+        # 清理临时目录
+        import shutil
+        shutil.rmtree(tmp_dir)
 
     print()
     print("  验证结果:")
     ok = verify_deps()
-
-    # 清理下载的 zip
-    if zip_path == DEPS_ZIP and zip_path.exists():
-        print()
-        ans = input("  是否删除 deps.zip? (已解压完毕) [Y/n]: ").strip().lower()
-        if ans != "n":
-            zip_path.unlink()
-            print("  ✓ 已删除")
 
     if ok:
         print()
@@ -259,7 +244,7 @@ def main():
         print("  ╚══════════════════════════════════════════╝")
     else:
         print()
-        print("  ✗ 验证未通过，请检查 zip 包内容是否完整。")
+        print("  ✗ 验证未通过，请检查下载是否完整。")
         return 1
 
     return 0
