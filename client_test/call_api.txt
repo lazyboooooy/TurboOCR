@@ -1,0 +1,48 @@
+TurboOCR HTTP API 快速参考
+============================
+
+服务地址: http://127.0.0.1:19527
+
+--- 健康检查 ---
+curl http://127.0.0.1:19527/api/health
+
+--- 图片 OCR ---
+curl -X POST http://127.0.0.1:19527/api/ocr/image --data-binary @screenshot.png
+
+返回:
+{
+  "text": "完整识别文本",
+  "items": [
+    {"text": "第一行", "score": 0.998, "box": [10,20,200,50]}
+  ],
+  "count": 1,
+  "total_ms": 123.4
+}
+
+--- PDF OCR ---
+curl -X POST http://127.0.0.1:19527/api/ocr/pdf --data-binary @document.pdf
+
+返回:
+{
+  "total_pages": 3,
+  "pages": [
+    {"page": 0, "text": "...", "items": [...], "total_ms": 500.0}
+  ]
+}
+
+--- 二维码/条形码 ---
+curl -X POST http://127.0.0.1:19527/api/ocr/qrcode --data-binary @barcode.png
+
+返回:
+{
+  "qrcodes": [{"type": "QRCode", "text": "https://...", "box": [...]}],
+  "count": 1
+}
+
+--- Python 客户端 ---
+python client.py screenshot.png              # 单张图片
+python client.py --pdf document.pdf          # PDF
+python client.py --qr barcode.png            # 二维码
+python client.py --batch ./images/           # 批量
+python client.py --health                    # 健康检查
+python client.py --host 192.168.1.100 image.png  # 远程服务

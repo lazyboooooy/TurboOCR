@@ -1,0 +1,19 @@
+text_type: general
+use_doc_orientation_classify: false
+use_doc_unwarping: false
+use_textline_orientation: false
+
+TextDetection:
+  model_dir: ""
+  model_name: ""
+  limit_side_len: 64
+  limit_type: min
+  thresh: 0.3
+  box_thresh: 0.2
+  unclip_ratio: 2.0
+
+TextRecognition:
+  model_dir: ""
+  model_name: ""
+  batch_size: 6
+  score_thresh: 0.0
