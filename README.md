@@ -9,6 +9,8 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2B-lightgrey)]()
 
+[English](README_EN.md)
+
 </div>
 
 ---
