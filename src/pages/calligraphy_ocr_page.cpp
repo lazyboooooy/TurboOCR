@@ -741,13 +741,105 @@ void CalligraphyOcrPage::clearAll() {
 }
 
 void CalligraphyOcrPage::exportResult() {
-    if(fullText_.isEmpty()&&jsonStr_.isEmpty()){mainWindow_->showStatus(_T("无结果"));return;}
-    QString dir=QFileDialog::getExistingDirectory(this,_T("导出目录")); if(dir.isEmpty())return;
-    if(!fullText_.isEmpty()){QFile f(dir+"/ocr_result.txt"); if(f.open(QIODevice::WriteOnly|QIODevice::Text)){f.write(fullText_.toUtf8());}}
-    if(!jsonStr_.isEmpty()){QFile f(dir+"/ocr_result.json"); if(f.open(QIODevice::WriteOnly|QIODevice::Text)){f.write(jsonStr_.toUtf8());}}
-    // 同时导出标注图片
-    if(!currentPixmap_.isNull()){QPixmap annotated=currentPixmap_;QPainter p(&annotated);p.setPen(QPen(ThemeManager::instance().currentTheme().boxExportPen,2));for(auto& it:items_){int w=it.box[2]-it.box[0],h=it.box[3]-it.box[1];if(w>0&&h>0)p.drawRect(it.box[0],it.box[1],w,h);}p.end();annotated.save(dir+"/ocr_annotated.png","PNG");}
-    mainWindow_->showStatus(_T("已导出到 ")+dir);
+    bool hasSingle = !fullText_.isEmpty() || !jsonStr_.isEmpty();
+    bool hasMulti  = !pdfPagesData_.isEmpty();
+    if (!hasSingle && !hasMulti) { mainWindow_->showStatus(_T("无结果")); return; }
+
+    QString dir = QFileDialog::getExistingDirectory(this, _T("导出目录"));
+    if (dir.isEmpty()) return;
+
+    int pageCount = pdfPagesData_.size();
+    if (pageCount > 1) {
+        // ── 多页 PDF：文字合并到单个 TXT/JSON，标注图片每页一个 ──
+
+        // 1. 合并所有页文字 → ocr_result.txt（单文件）
+        QString allText;
+        for (int i = 0; i < pageCount; ++i) {
+            if (pdfPagesData_[i].text.isEmpty()) continue;
+            allText += QString("\n==== %1 %2/%3 ====\n\n")
+                .arg(_T("第")).arg(i + 1).arg(pageCount);
+            allText += pdfPagesData_[i].text;
+        }
+        if (!allText.isEmpty()) {
+            allText = allText.trimmed();  // 去掉开头多余空行
+            QFile f(dir + "/ocr_result.txt");
+            if (f.open(QIODevice::WriteOnly | QIODevice::Text))
+                f.write(allText.toUtf8());
+        }
+
+        // 2. 合并所有页 JSON → ocr_result.json（单文件）
+        QJsonArray pagesArr;
+        for (int i = 0; i < pageCount; ++i) {
+            QJsonObject po;
+            po["page"] = i + 1;
+            po["text"] = pdfPagesData_[i].text;
+            if (!pdfPagesData_[i].json.isEmpty()) {
+                QJsonDocument sub = QJsonDocument::fromJson(pdfPagesData_[i].json.toUtf8());
+                if (!sub.isNull()) po["data"] = sub.object();
+            }
+            pagesArr.append(po);
+        }
+        QJsonObject root;
+        root["totalPages"] = pageCount;
+        root["pages"] = pagesArr;
+        QString allJson = QJsonDocument(root).toJson(QJsonDocument::Indented);
+        {
+            QFile f(dir + "/ocr_result.json");
+            if (f.open(QIODevice::WriteOnly | QIODevice::Text))
+                f.write(allJson.toUtf8());
+        }
+
+        // 3. 每页单独导出一张标注图片 → ocr_annotated_p1.png ...
+        for (int i = 0; i < pageCount; ++i) {
+            ensurePageRendered(i);
+            if (pdfPages_[i].isEmpty()) continue;
+            QPixmap pm(pdfPages_[i]);
+            if (pm.isNull()) continue;
+
+            // 从该页 JSON 里取检测框
+            QJsonDocument sub = QJsonDocument::fromJson(pdfPagesData_[i].json.toUtf8());
+            QJsonArray arr = sub.object()["ocrResults"].toArray();
+            QPainter p(&pm);
+            p.setPen(QPen(ThemeManager::instance().currentTheme().boxExportPen, 2));
+            for (int j = 0; j < arr.size(); ++j) {
+                QJsonArray b = arr[j].toObject()["box"].toArray();
+                if (b.size() >= 4) {
+                    int x = b[0].toInt(), y = b[1].toInt();
+                    int w = b[2].toInt() - x, h = b[3].toInt() - y;
+                    if (w > 0 && h > 0) p.drawRect(x, y, w, h);
+                }
+            }
+            p.end();
+            pm.save(dir + QString("/ocr_annotated_p%1.png").arg(i + 1), "PNG");
+        }
+
+        mainWindow_->showStatus(QString(_T("已导出 %1 页到 ")).arg(pageCount) + dir);
+
+    } else {
+        // ── 单页（或无 pdfPagesData_ 缓存）：保持原有行为 ──
+        if (!fullText_.isEmpty()) {
+            QFile f(dir + "/ocr_result.txt");
+            if (f.open(QIODevice::WriteOnly | QIODevice::Text))
+                f.write(fullText_.toUtf8());
+        }
+        if (!jsonStr_.isEmpty()) {
+            QFile f(dir + "/ocr_result.json");
+            if (f.open(QIODevice::WriteOnly | QIODevice::Text))
+                f.write(jsonStr_.toUtf8());
+        }
+        if (!currentPixmap_.isNull()) {
+            QPixmap annotated = currentPixmap_;
+            QPainter p(&annotated);
+            p.setPen(QPen(ThemeManager::instance().currentTheme().boxExportPen, 2));
+            for (auto& it : items_) {
+                int w = it.box[2] - it.box[0], h = it.box[3] - it.box[1];
+                if (w > 0 && h > 0) p.drawRect(it.box[0], it.box[1], w, h);
+            }
+            p.end();
+            annotated.save(dir + "/ocr_annotated.png", "PNG");
+        }
+        mainWindow_->showStatus(_T("已导出到 ") + dir);
+    }
 }
 
 void CalligraphyOcrPage::onTextBoxClicked(int idx) {
