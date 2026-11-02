@@ -1,0 +1,38 @@
+﻿{
+    "label":  "ORT DirectML (medium)",
+    "exe":  "F:\\QPrj\\TurboOCRV1.1.0\\dist\\TurboOCR-1.1.0\\TurboOCR.exe",
+    "image":  "F:\\QPrj\\TurboOCRV1.1.0\\demo\\封面.png",
+    "runs":  10,
+    "warmup":  2,
+    "engine_ms":  {
+                      "min":  175.72,
+                      "median":  183.79,
+                      "mean":  186.33,
+                      "p95":  207.31,
+                      "max":  207.31
+                  },
+    "wall_ms":  {
+                    "min":  384.92,
+                    "median":  423.79,
+                    "mean":  420.18,
+                    "p95":  447.61,
+                    "max":  447.61
+                },
+    "cpu_avg_cores":  0.29,
+    "cpu_avg_percent_total":  1.8,
+    "cpu_avg_percent_one_core":  29,
+    "cpu_time_s":  1.23,
+    "wall_s":  4.26,
+    "working_set_mb":  526,
+    "peak_working_set_mb":  581.3,
+    "private_mb":  1144.2,
+    "warm_working_set_mb":  525.9,
+    "warm_private_mb":  1144.2,
+    "gpu_baseline_mb":  1296,
+    "gpu_after_warmup_mb":  1997,
+    "gpu_end_mb":  1997,
+    "gpu_delta_after_warmup_mb":  701,
+    "gpu_process_mb":  null,
+    "last_count":  7,
+    "logical_cpus":  16
+}

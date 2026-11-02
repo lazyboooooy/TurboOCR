@@ -1,0 +1,38 @@
+﻿{
+    "label":  "Paddle CPU MKL-DNN (medium, 16 threads)",
+    "exe":  "F:\\QPrj\\TurboOCR\\build\\Release\\TurboOCR.exe",
+    "image":  "F:\\QPrj\\TurboOCRV1.1.0\\demo\\封面.png",
+    "runs":  10,
+    "warmup":  3,
+    "engine_ms":  {
+                      "min":  1856.16,
+                      "median":  2041.72,
+                      "mean":  2063.79,
+                      "p95":  2555.22,
+                      "max":  2555.22
+                  },
+    "wall_ms":  {
+                    "min":  2056.82,
+                    "median":  2326.7,
+                    "mean":  2311.81,
+                    "p95":  2856.94,
+                    "max":  2856.94
+                },
+    "cpu_avg_cores":  12.38,
+    "cpu_avg_percent_total":  77.4,
+    "cpu_avg_percent_one_core":  1237.7,
+    "cpu_time_s":  287.06,
+    "wall_s":  23.19,
+    "working_set_mb":  717.7,
+    "peak_working_set_mb":  860.1,
+    "private_mb":  1195.4,
+    "warm_working_set_mb":  716.9,
+    "warm_private_mb":  1194.7,
+    "gpu_baseline_mb":  1438,
+    "gpu_after_warmup_mb":  1382,
+    "gpu_end_mb":  1378,
+    "gpu_delta_after_warmup_mb":  -56,
+    "gpu_process_mb":  null,
+    "last_count":  7,
+    "logical_cpus":  16
+}

@@ -54,14 +54,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     // 检测 GPU 兼容性，不兼容则强制 CPU
     GpuInfo gpuInfo = GpuChecker::detect();
     TLOG_INFO() << "GPU detect:" << gpuInfo.summary();
-    if (!gpuInfo.paddleCudaOk) {
+    if (!gpuInfo.directMlOk) {
         auto& cfg = ConfigManager::instance();
         auto params = cfg.ocrParams();
         if (params.device.find("gpu") != std::string::npos) {
             params.device = "cpu";
             cfg.setOcrParams(params);
             cfg.save();
-            TLOG_INFO() << "GPU not compatible, forced device to CPU";
+            TLOG_INFO() << "DirectML not available, forced device to CPU";
         }
     }
 
@@ -172,7 +172,7 @@ void MainWindow::showAbout() {
     about.setWindowTitle(_T("关于 TOCR"));
     about.setIconPixmap(QPixmap(QApplication::applicationDirPath() + "/icon.png")
                         .scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    about.setText("<h3>TOCR v0.4.0</h3>"
+    about.setText("<h3>TOCR v1.1.0</h3>"
                   "<p>作者: 闻道且行之</p>"
                   "<p>联系方式: knowtoact@qq.com</p>");
     auto* copyBtn = about.addButton(_T("复制邮箱"), QMessageBox::ActionRole);

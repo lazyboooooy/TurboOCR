@@ -62,6 +62,6 @@ private:
   ClasPredictorParams params_;
   std::unordered_map<std::string, std::unique_ptr<Topk>> post_op_;
   std::vector<ClasPredictorResult> predictor_result_vec_;
-  std::unique_ptr<PaddleInfer> infer_ptr_;
+  std::unique_ptr<OrtInfer> infer_ptr_;
   int input_index_ = 0;
 };

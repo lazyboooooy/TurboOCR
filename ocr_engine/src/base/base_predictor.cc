@@ -154,8 +154,8 @@ const PaddlePredictorOption &BasePredictor::PPOption() {
 
 void BasePredictor::SetBatchSize(int batch_size) { batch_size_ = batch_size; }
 
-std::unique_ptr<PaddleInfer> BasePredictor::CreateStaticInfer() {
-  return std::unique_ptr<PaddleInfer>(new PaddleInfer(
+std::unique_ptr<OrtInfer> BasePredictor::CreateStaticInfer() {
+  return std::unique_ptr<OrtInfer>(new OrtInfer(
       model_name_, model_dir_.value(), MODEL_FILE_PREFIX, PPOption()));
 }
 

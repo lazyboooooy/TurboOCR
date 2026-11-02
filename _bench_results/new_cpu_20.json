@@ -1,0 +1,38 @@
+﻿{
+    "label":  "ORT CPU (medium, 8 threads)",
+    "exe":  "F:\\QPrj\\TurboOCRV1.1.0\\dist\\TurboOCR-1.1.0\\TurboOCR.exe",
+    "image":  "F:\\QPrj\\TurboOCRV1.1.0\\demo\\封面.png",
+    "runs":  20,
+    "warmup":  3,
+    "engine_ms":  {
+                      "min":  2313.33,
+                      "median":  2350.7,
+                      "mean":  2350.17,
+                      "p95":  2373.56,
+                      "max":  2378.26
+                  },
+    "wall_ms":  {
+                    "min":  2499.35,
+                    "median":  2591.3,
+                    "mean":  2591.41,
+                    "p95":  2630.68,
+                    "max":  2668.98
+                },
+    "cpu_avg_cores":  7.34,
+    "cpu_avg_percent_total":  45.9,
+    "cpu_avg_percent_one_core":  734.4,
+    "cpu_time_s":  381.22,
+    "wall_s":  51.91,
+    "working_set_mb":  571.9,
+    "peak_working_set_mb":  619.7,
+    "private_mb":  662.6,
+    "warm_working_set_mb":  586.4,
+    "warm_private_mb":  663.1,
+    "gpu_baseline_mb":  1380,
+    "gpu_after_warmup_mb":  1397,
+    "gpu_end_mb":  1390,
+    "gpu_delta_after_warmup_mb":  17,
+    "gpu_process_mb":  null,
+    "last_count":  7,
+    "logical_cpus":  16
+}

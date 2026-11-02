@@ -30,7 +30,7 @@ static bool notifyExistingInstance() {
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     app.setApplicationName("TOCR");
-    app.setApplicationVersion("0.4.0");
+    app.setApplicationVersion("1.1.0");
 
     // ---- 单实例检测 ----
     QSharedMemory sharedMem(kSharedMemKey);

@@ -228,7 +228,7 @@ void SettingsPage::loadFromConfig() {
 void SettingsPage::applySettings() {
     if (loading_) return; loading_ = true;
 
-    // 识别中禁止切换设备/模型，避免 Paddle 引擎崩溃
+    // 识别中禁止切换设备/模型，避免推理引擎崩溃
     auto* engine = mainWindow_->engine();
     if (engine && engine->isPredicting()) {
         QMessageBox::warning(this, _T("提示"),
@@ -262,7 +262,7 @@ void SettingsPage::applySettings() {
     p.device           = deviceCombo_->currentText().toStdString();
     p.cpu_threads      = threadsSpin_->value();
     p.rec_batch_size   = recBatchSpin_->value();
-    p.enable_mkldnn    = true;   // 默认强制开启
+    p.enable_mkldnn    = false;   // 默认强制开启
     p.det_thresh       = static_cast<float>(detThreshSpin_->value());
     p.det_box_thresh   = static_cast<float>(detBoxThreshSpin_->value());
     p.det_unclip_ratio = static_cast<float>(detUnclipSpin_->value());
@@ -325,7 +325,7 @@ void SettingsPage::updateGpuStatus() {
 
     // 检测 GPU 兼容性
     GpuInfo info = GpuChecker::detect();
-    bool gpuOk = info.paddleCudaOk;
+    bool gpuOk = info.directMlOk;
 
     // 禁用/启用 GPU 下拉项
     auto* model = qobject_cast<QStandardItemModel*>(deviceCombo_->model());
