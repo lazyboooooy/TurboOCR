@@ -27,6 +27,27 @@ The inference backend moved from **Paddle Inference + CUDA** to **ONNX Runtime +
 
 See [ONNXRuntime迁移三方案对比.md](ONNXRuntime迁移三方案对比.md) for the design comparison (Chinese).
 
+## Performance (v1.1.0 vs v0.3.0)
+
+Windows 11, i7-11800H (8C/16T), 32 GB RAM, RTX 3060 12 GB; PP-OCRv6 **medium**; `demo/封面.png` (7 lines). GPU: 10-run median; CPU: 20-run median.
+
+| Scenario | Backend | engine | HTTP | CPU cores | Private | GPU mem |
+|---|---|---:|---:|---:|---:|---:|
+| GPU | Paddle CUDA (old) | **117.6 ms** | **353.9 ms** | 0.28 | 1435 MB | +466 MB |
+| GPU | ORT DirectML (new) | 183.8 ms | 423.8 ms | 0.29 | **1144 MB** | +701 MB |
+| CPU 8T | Paddle MKL-DNN (old) | **2087 ms** | **2359 ms** | 11.86 | 1195 MB | — |
+| CPU 8T | ORT CPU (new) | 2351 ms | 2591 ms | **7.34** | **663 MB** | — |
+| CPU 16T | Paddle MKL-DNN (old) | 2239 ms | 2548 ms | 11.61 | 1206 MB | — |
+| CPU 16T | ORT CPU (new) | **2147 ms** | **2411 ms** | 13.24 | **658 MB** | — |
+
+**Takeaways:**
+
+- **NVIDIA GPU**: Paddle CUDA is still ~**20%** faster end-to-end; DirectML wins on hardware coverage, package size (**3.2 GB → 317 MB**) and process memory.
+- **CPU, 8 threads**: old Paddle is ~**12.6%** faster but uses ~**38%** more CPU; the new ORT path is lighter.
+- **CPU, 16 threads**: ORT is roughly equal (~4% faster, within noise) with ~**45%** lower private memory.
+
+Full methodology, raw JSON and variance notes: [BENCHMARK.md](BENCHMARK.md).
+
 ## Features
 
 - Three model tiers: tiny / small / medium

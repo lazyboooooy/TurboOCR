@@ -25,7 +25,28 @@ v1.1.0 将推理后端从 **Paddle Inference + CUDA** 迁移到 **ONNX Runtime +
 - 无可用 GPU 时自动回退 CPU（ONNX Runtime CPU EP）
 - 当前测试包约 **317 MB**（含 7 个 ONNX 模型，模型合计约 175 MB）
 
-选型与方案对比见 [ONNXRuntime迁移三方案对比.md](ONNXRuntime迁移三方案对比.md)，性能实测见 [BENCHMARK.md](BENCHMARK.md)。
+选型与方案对比见 [ONNXRuntime迁移三方案对比.md](ONNXRuntime迁移三方案对比.md)。
+
+## 性能对比（v1.1.0 vs v0.3.0）
+
+测试环境：Windows 11、i7-11800H（8C/16T）、32 GB、RTX 3060 12 GB；PP-OCRv6 **medium**；`demo/封面.png`（7 行）。GPU 为 10 次中位数，CPU 为 20 次中位数。
+
+| 场景 | 后端 | engine | HTTP 端到端 | CPU 平均核心 | 私有内存 | GPU 显存增量 |
+|---|---|---:|---:|---:|---:|---:|
+| GPU | 旧版 Paddle CUDA | **117.6 ms** | **353.9 ms** | 0.28 | 1435 MB | +466 MB |
+| GPU | 新版 ORT DirectML | 183.8 ms | 423.8 ms | 0.29 | **1144 MB** | +701 MB |
+| CPU 8T | 旧版 Paddle MKL-DNN | **2087 ms** | **2359 ms** | 11.86 | 1195 MB | — |
+| CPU 8T | 新版 ORT CPU | 2351 ms | 2591 ms | **7.34** | **663 MB** | — |
+| CPU 16T | 旧版 Paddle MKL-DNN | 2239 ms | 2548 ms | 11.61 | 1206 MB | — |
+| CPU 16T | 新版 ORT CPU | **2147 ms** | **2411 ms** | 13.24 | **658 MB** | — |
+
+**结论：**
+
+- **N 卡**：旧版 Paddle CUDA 仍最快，端到端约快 **20%**；新版 DirectML 的收益是一份包通吃 N/A/Intel、包体 **3.2 GB → 317 MB**、进程内存更低。
+- **CPU 默认 8 线程**：旧版快约 **12.6%**，但多用约 **38%** 的 CPU；新版更省 CPU/内存。
+- **CPU 16 线程**：新版 ORT 与旧版基本持平（约快 4%，接近噪声），私有内存低约 **45%**。
+
+完整测试方法、原始 JSON、波动说明见 [BENCHMARK.md](BENCHMARK.md)。
 
 ## 特性
 
