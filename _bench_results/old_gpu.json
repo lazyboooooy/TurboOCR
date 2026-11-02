@@ -1,0 +1,38 @@
+﻿{
+    "label":  "Paddle CUDA (medium)",
+    "exe":  "F:\\QPrj\\TurboOCR\\build\\Release\\TurboOCR.exe",
+    "image":  "F:\\QPrj\\TurboOCRV1.1.0\\demo\\封面.png",
+    "runs":  10,
+    "warmup":  2,
+    "engine_ms":  {
+                      "min":  97.01,
+                      "median":  117.55,
+                      "mean":  116.74,
+                      "p95":  131.05,
+                      "max":  131.05
+                  },
+    "wall_ms":  {
+                    "min":  340.49,
+                    "median":  353.92,
+                    "mean":  365.83,
+                    "p95":  433.66,
+                    "max":  433.66
+                },
+    "cpu_avg_cores":  0.28,
+    "cpu_avg_percent_total":  1.7,
+    "cpu_avg_percent_one_core":  27.5,
+    "cpu_time_s":  1.09,
+    "wall_s":  3.97,
+    "working_set_mb":  841.4,
+    "peak_working_set_mb":  896.1,
+    "private_mb":  1435,
+    "warm_working_set_mb":  841,
+    "warm_private_mb":  1434.6,
+    "gpu_baseline_mb":  1295,
+    "gpu_after_warmup_mb":  1761,
+    "gpu_end_mb":  1781,
+    "gpu_delta_after_warmup_mb":  466,
+    "gpu_process_mb":  null,
+    "last_count":  7,
+    "logical_cpus":  16
+}

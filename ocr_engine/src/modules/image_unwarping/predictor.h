@@ -55,7 +55,7 @@ public:
 private:
   std::unordered_map<std::string, std::unique_ptr<DocTrPostProcess>> post_op_;
   std::vector<WarpPredictorResult> predictor_result_vec_;
-  std::unique_ptr<PaddleInfer> infer_ptr_;
+  std::unique_ptr<OrtInfer> infer_ptr_;
   WarpPredictorParams params_;
   int input_index_ = 0;
 };

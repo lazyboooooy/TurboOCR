@@ -14,36 +14,45 @@
 
 #pragma once
 
-#include <opencv2/opencv.hpp>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include <onnxruntime_cxx_api.h>
+#include <opencv2/opencv.hpp>
+
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "paddle_inference_api.h"
 #include "src/utils/ilogger.h"
 #include "src/utils/pp_option.h"
-class PaddleInfer {
+
+/// ONNX Runtime 推理封装。
+/// 模型文件为 <model_dir>/<model_file_prefix>.onnx。
+/// device=gpu 时使用 DirectML EP，创建失败会自动回退 CPU EP。
+class OrtInfer {
 public:
-  explicit PaddleInfer(const std::string &model_name,
-                       const std::string &model_dir,
-                       const std::string &model_file_prefix,
-                       const PaddlePredictorOption &option);
-  ~PaddleInfer() = default;
-  absl::StatusOr<std::vector<cv::Mat>>
-  Apply(const std::vector<cv::Mat> &x); //***********
+  OrtInfer(const std::string &model_name,
+           const std::string &model_dir,
+           const std::string &model_file_prefix,
+           const PaddlePredictorOption &option);
+  ~OrtInfer();
+
+  absl::StatusOr<std::vector<cv::Mat>> Apply(const std::vector<cv::Mat> &x);
+
+  bool usingDml() const { return using_dml_; }
 
 private:
+  absl::Status Create();
+
   std::string model_dir_;
   std::string model_file_prefix_;
   std::string model_name_;
   PaddlePredictorOption option_;
-  std::shared_ptr<paddle_infer::Predictor> predictor_;
 
-  std::vector<std::unique_ptr<paddle_infer::Tensor>> input_handles_;
-  std::vector<std::unique_ptr<paddle_infer::Tensor>> output_handles_;
-
-  absl::StatusOr<std::shared_ptr<paddle_infer::Predictor>> Create();
-
-  absl::Status CheckRunMode();
+  std::unique_ptr<Ort::Session> session_;
+  std::vector<std::string> input_names_;
+  std::vector<std::string> output_names_;
+  std::vector<ONNXTensorElementDataType> input_types_;
+  std::vector<ONNXTensorElementDataType> output_types_;
+  bool using_dml_ = false;
 };

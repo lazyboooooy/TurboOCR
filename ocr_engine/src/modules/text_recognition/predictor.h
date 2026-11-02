@@ -63,7 +63,7 @@ public:
 private:
   std::unordered_map<std::string, std::unique_ptr<CTCLabelDecode>> post_op_;
   std::vector<TextRecPredictorResult> predictor_result_vec_;
-  std::unique_ptr<PaddleInfer> infer_ptr_;
+  std::unique_ptr<OrtInfer> infer_ptr_;
   TextRecPredictorParams params_;
   int input_index_ = 0;
 };

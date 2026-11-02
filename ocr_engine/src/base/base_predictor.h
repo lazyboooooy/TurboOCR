@@ -44,7 +44,7 @@ public:
   template <typename T>
   std::vector<std::unique_ptr<BaseCVResult>> Predict(const T &input);
 
-  std::unique_ptr<PaddleInfer> CreateStaticInfer();
+  std::unique_ptr<OrtInfer> CreateStaticInfer();
 
   const PaddlePredictorOption &PPOption();
   absl::StatusOr<std::string> ModelName() { return model_name_; };

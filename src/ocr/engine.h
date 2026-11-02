@@ -28,9 +28,9 @@ struct OcrParams {
     std::string cls_model_dir;
 
     // 设备
-    std::string device = "cpu";                // cpu / gpu:0
+    std::string device = "gpu:0";                // cpu / gpu:0
     int    cpu_threads = 8;
-    bool   enable_mkldnn = true;
+    bool   enable_mkldnn = false;
     int    mkldnn_cache_capacity = 10;
 
     // 检测参数（与 PP-OCRv6 官方推荐值一致）
